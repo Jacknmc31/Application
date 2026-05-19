@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application — Jack</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0e0e0e;
+  color: #f0ede6;
+  font-family: 'Instrument Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.noise {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+.page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* STAMP BAR */
+.stamp-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 14px;
+  border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 36px;
+}
+.doc-id {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #555;
+  letter-spacing: 0.08em;
+}
+.status-pill {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #888;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.1em;
+}
+
+/* HERO */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 48px;
+}
+.form-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #555;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  display: block;
+}
+h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 52px;
+  line-height: 1;
+  color: #f0ede6;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+h1 em { font-style: italic; color: #c8b89a; }
+
+.info-table { display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px; }
+.info-row { display: flex; align-items: baseline; gap: 8px; }
+.info-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #555;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  width: 68px;
+}
+.info-value { font-size: 13px; color: #ccc; font-weight: 500; }
+
+.motto-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; }
+.motto-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; color: #555;
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px;
+}
+.motto-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 13px; color: #888; font-style: italic; line-height: 1.5;
+}
+
+.photo-slot {
+  background: #161616;
+  border: 1px dashed #2e2e2e;
+  border-radius: 6px;
+  aspect-ratio: 3/4;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; color: #444;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.08em;
+  text-align: center; padding: 12px;
+}
+.photo-slot svg { opacity: 0.4; }
+
+.track-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #1a1a1a; border: 1px solid #2e2e2e;
+  padding: 7px 12px; border-radius: 6px;
+  font-size: 12px; color: #bbb;
+}
+.track-dot {
+  width: 5px; height: 5px;
+  background: #c8b89a; border-radius: 50%;
+  animation: pulse 2s infinite; flex-shrink: 0;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* SECTIONS */
+.section { margin-bottom: 48px; }
+.section-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; color: #555;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: #1e1e1e; }
+
+/* INTERESTS */
+.interests-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.int-photo-card {
+  position: relative; height: 100px;
+  border-radius: 4px; overflow: hidden;
+  border: 1px solid #2a2a2a; background: #161616;
+}
+.int-photo-card .bg-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover; opacity: 0.5;
+}
+.int-photo-card .bg-placeholder { position: absolute; inset: 0; background: #1c1c1c; }
+.int-photo-card .card-label {
+  position: absolute; bottom: 10px; left: 0; right: 0;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: #f0ede6;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+}
+
+.int-tag {
+  height: 56px; background: #161616;
+  border: 1px solid #2a2a2a; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: #ccc;
+  letter-spacing: 0.06em; text-align: center; padding: 8px;
+  cursor: default; transition: border-color 0.2s, color 0.2s;
+}
+.int-tag:hover { border-color: #c8b89a; color: #f0ede6; }
+
+/* ADVANTAGES */
+.adv-item {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 16px 0;
+  border-bottom: 1px solid #1a1a1a;
+}
+.adv-item.has-photo { grid-template-columns: 36px 1fr 88px; align-items: center; }
+.adv-item:last-child { border-bottom: none; }
+
+.adv-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  color: #383838;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+.adv-body { display: flex; flex-direction: column; gap: 3px; }
+.adv-main { font-size: 14px; color: #d0ccc4; line-height: 1.4; font-weight: 500; }
+.adv-sub { font-size: 11px; color: #555; font-style: italic; }
+
+.adv-photo {
+  background: #161616;
+  border: 1px dashed #2a2a2a;
+  border-radius: 4px; height: 156px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px; color: #3a3a3a;
+  letter-spacing: 0.08em; text-align: center; padding: 6px;
+  align-self: center;
+}
+
+/* DISADVANTAGES */
+.disadvantage-list { list-style: none; }
+.dis-item.has-photo {
+  display: grid;
+  grid-template-columns: 10px 1fr 88px;
+  gap: 14px;
+  align-items: center;
+}
+.dis-photo {
+  background: #161616;
+  border: 1px dashed #2a2a2a;
+  border-radius: 4px;
+  height: 117px;
+  overflow: hidden;
+  align-self: center;
+}
+.dis-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.dis-item {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 12px 0; border-bottom: 1px solid #1a1a1a;
+  font-size: 14px; color: #888;
+}
+.dis-item:last-child { border-bottom: none; }
+.dis-dash { font-family: 'DM Mono', monospace; color: #3a3a3a; font-size: 11px; flex-shrink: 0; }
+.dis-note { font-size: 11px; color: #555; font-style: italic; }
+
+/* FINALE */
+.finale { margin-top: 60px; text-align: center; }
+.moon-photo {
+  background: #111; border: 1px dashed #2a2a2a;
+  border-radius: 10px; height: 200px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; color: #3a3a3a;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.12em;
+  margin-bottom: 32px; position: relative; overflow: hidden;
+}
+
+
+.question-block { margin-bottom: 24px; }
+.question-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px; line-height: 1.2; color: #f0ede6; margin-bottom: 6px;
+}
+.question-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: #444; letter-spacing: 0.1em; }
+
+/* ANSWER CARDS */
+.answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+.answer-card {
+  background: #111; border: 1px solid #222;
+  border-radius: 8px; overflow: hidden;
+  transition: border-color 0.25s; cursor: pointer;
+}
+.answer-card:hover { border-color: #c8b89a; }
+.answer-card:active { transform: scale(0.99); }
+
+.answer-photo-slot {
+  background: #161616; border-bottom: 1px dashed #222;
+  height: 110px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; color: #333;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px; letter-spacing: 0.1em;
+  text-align: center; padding: 10px;
+}
+.answer-label {
+  padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ans-text { font-family: 'DM Serif Display', serif; font-size: 20px; color: #f0ede6; }
+.ans-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: #555; }
+
+.reveal-content {
+  display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 18px 14px; gap: 10px;
+  min-height: 160px;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.answer-card.state-yes { border-color: #c8b89a; }
+.answer-card.state-yes .answer-photo-slot,
+.answer-card.state-yes .answer-label { display: none; }
+.answer-card.state-yes .reveal-content { display: flex; animation: fadeIn 0.3s ease; }
+
+.answer-card.state-no { border-color: #2a2a2a; }
+.answer-card.state-no .answer-photo-slot,
+.answer-card.state-no .answer-label { display: none; }
+.answer-card.state-no .reveal-content { display: flex; animation: fadeIn 0.3s ease; }
+
+.ig-box {
+  border: 1px solid #c8b89a; border-radius: 6px;
+  padding: 12px 14px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; background: #161616; width: 100%;
+}
+.ig-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+  display: flex; align-items: center; justify-content: center;
+}
+.ig-icon svg { width: 17px; height: 17px; }
+.ig-label { font-family: 'DM Mono', monospace; font-size: 8px; color: #555; letter-spacing: 0.14em; }
+.ig-handle { font-family: 'DM Mono', monospace; font-size: 14px; color: #c8b89a; letter-spacing: 0.04em; }
+
+.sorry-inner { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sorry-main { font-family: 'DM Serif Display', serif; font-size: 18px; color: #555; font-style: italic; line-height: 1.4; text-align: center; }
+.sorry-mono { font-family: 'DM Mono', monospace; font-size: 8px; color: #333; letter-spacing: 0.1em; margin-top: 4px; text-align: center; }
+
+.reset-btn {
+  font-family: 'DM Mono', monospace; font-size: 8px; color: #444;
+  letter-spacing: 0.1em; background: none;
+  border: 1px solid #2a2a2a; padding: 4px 10px;
+  border-radius: 4px; cursor: pointer; margin-top: 4px;
+}
+.reset-btn:hover { color: #888; border-color: #444; }
+
+/* FOOTER */
+.footer-line {
+  margin-top: 48px; padding-top: 16px;
+  border-top: 1px solid #1a1a1a;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-mono { font-family: 'DM Mono', monospace; font-size: 9px; color: #333; letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="page">
+
+  <div class="stamp-bar">
+    <span class="doc-id">FORM 001 · REV. 2026</span>
+    <span class="status-pill">UNDER REVIEW</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-text">
+      <span class="form-label">Applicant name</span>
+      <h1>Jack</h1>
+      <div class="info-table">
+        <div class="info-row">
+          <span class="info-label">Varsta</span>
+          <span class="info-value">25</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Ocupatie</span>
+          <span class="info-value">Inginer</span>
+        </div>
+        <div class="motto-block">
+          <div class="motto-label">Motto</div>
+          <div class="motto-text">Life is too short<br>to miss your chances.</div>
+        </div>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:#555;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">Currently on repeat:</div>
+      <a href="https://open.spotify.com/track/7foPCtCMJoJWhVlnjHHEdv?si=f8a616c8efdd4d96" target="_blank" style="text-decoration:none;">
+        <div class="track-pill">
+          <span class="track-dot"></span>
+          In Vant — Killa Fonic
+        </div>
+      </a>
+    </div>
+    <div class="photo-slot" style="padding:0;overflow:hidden;">
+      <img src="img/intro.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">§ 01 — Interese declarate</div>
+    <div class="interests-grid">
+      <div class="int-photo-card">
+        <img class="bg-img" src="img/moto.jpeg">
+        <div class="card-label">Motociclete</div>
+      </div>
+      <div class="int-photo-card">
+        <img class="bg-img" src="img/snow.jpeg">
+        <div class="card-label">Snowboarding</div>
+      </div>
+      <div class="int-tag">Climbing</div>
+      <div class="int-tag">Random sidequests</div>
+      <div class="int-tag">Spritz</div>
+      <div class="int-tag">Anime</div>
+      <div class="int-tag">Video games</div>
+      <div class="int-tag">Board games</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">§ 02 — Avantaje competitive</div>
+
+    <div class="adv-item has-photo">
+      <div class="adv-num">01</div>
+      <div class="adv-body">
+        <span class="adv-main">Aduc mancare la 3 dimineata.</span>
+        <span class="adv-sub">Nu metaforic. Literalmente.</span>
+      </div>
+      <div class="adv-photo" style="padding:0;overflow:hidden;">
+        <img src="img/burghir.jpeg" style="width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block;background:#161616;">
+      </div>
+    </div>
+
+    <div class="adv-item">
+      <div class="adv-num">02</div>
+      <div class="adv-body">
+        <span class="adv-main">Show watch buddy.</span>
+        <span class="adv-sub">Recomandarile incluse in pachet.</span>
+      </div>
+    </div>
+
+    <div class="adv-item">
+      <div class="adv-num">03</div>
+      <div class="adv-body">
+        <span class="adv-main">Built-in gaming partner.</span>
+        <span class="adv-sub">Catan are un loc special in suflet.</span>
+      </div>
+    </div>
+
+    <div class="adv-item">
+      <div class="adv-num">04</div>
+      <div class="adv-body">
+        <span class="adv-main">Mereu up pentru side quests.</span>
+        <span class="adv-sub">Even the boring ones.</span>
+      </div>
+    </div>
+
+    <div class="adv-item">
+      <div class="adv-num">05</div>
+      <div class="adv-body">
+        <span class="adv-main">Neinteresat de situationships.</span>
+        <span class="adv-sub">Aplicatia vorbeste de la sine.</span>
+      </div>
+    </div>
+
+    <div class="adv-item">
+      <div class="adv-num">06</div>
+      <div class="adv-body">
+        <span class="adv-main">Uneori am glume bune.</span>
+        <span class="adv-sub">Rata de succes variabila, dar sincera.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section">
+    <div class="section-title">§ 03 — Dezavantaje (transparenta totala)</div>
+    <ul class="disadvantage-list">
+      <li class="dis-item has-photo">
+        <span class="dis-dash">—</span>
+        <span>Am "Dad photos" <span class="dis-note"></span></span>
+        <div class="dis-photo">
+          <img src="img/dad-photo.jpeg">
+        </div>
+      </li>
+      <li class="dis-item">
+        <span class="dis-dash">—</span>
+        <span>Socially awkward <span class="dis-note">· dar intr-un mod endearing, probabil</span></span>
+      </li>
+      <li class="dis-item">
+        <span class="dis-dash">—</span>
+        <span>Aproape 0 digital footprint <span class="dis-note">· poate fi un avantaj, de fapt</span></span>
+      </li>
+      <li class="dis-item">
+        <span class="dis-dash">—</span>
+        <span>Program de somn haotic <span class="dis-note">· disponibil la 3am, deci consistent</span></span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="finale">
+    <p style="text-align:center;font-family:'DM Serif Display',serif;font-size:18px;color:#f0ede6;font-style:italic;margin-bottom:24px;">Ladies and gentlemen... He's going for the three-pointer.</p>
+    <div class="moon-photo" style="padding:0;overflow:hidden;border:1px dashed #2a2a2a;">
+      <img src="img/Shoot-it.png" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;">
+    </div>
+
+    <div class="question-block">
+      <p class="question-text">Ai fi interesata<br>sa iesim la un date?</p>
+      <p class="question-sub">SELECT ONE · REQUIRED FIELD · NO PRESSURE*</p>
+    </div>
+
+    <div class="answer-grid">
+      <div class="answer-card" id="card-yes" onclick="pick('yes')">
+        <div class="answer-photo-slot" style="padding:0;overflow:hidden;">
+          <img src="img/hit.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center;">
+        </div>
+        <div class="answer-label">
+          <div>
+            <div class="ans-text">Da.</div>
+          </div>
+          <span style="font-size:18px;">🏀</span>
+        </div>
+        <div class="reveal-content">
+          <div class="ig-box">
+            <div style="font-size:28px;margin-bottom:8px;">🏀</div>
+            <span class="ig-handle" style="font-size:15px;">Ball's in your court.</span>
+            <span class="ig-label" style="margin-top:8px;">CERERE APROBATA · DOSAR ACTIV</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="answer-card" id="card-no" onclick="pick('no')">
+        <div class="answer-photo-slot" style="padding:0;overflow:hidden;">
+          <img src="img/miss.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center;">
+        </div>
+        <div class="answer-label">
+          <div>
+            <div class="ans-text">Nu.</div>
+          </div>
+          <span style="font-size:18px;">💨</span>
+        </div>
+        <div class="reveal-content">
+          <div class="sorry-inner">
+            <p class="sorry-main">Ah..<br>Ma scuzati de deranj.</p>
+            <p class="sorry-mono">CERERE RESPINSA · DOSAR INCHIS</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-line">
+    <span class="footer-mono">FORM 001 · CONFIDENTIAL</span>
+    <span class="footer-mono">*Chiar nu.</span>
+  </div>
+  <p style="text-align:center;font-family:'DM Mono',monospace;font-size:9px;color:#333;letter-spacing:0.1em;margin-top:16px;">Puncte bonus pentru cringe?</p>
+
+</div>
+<script>
+function pick(choice) {
+  var yes = document.getElementById('card-yes');
+  var no = document.getElementById('card-no');
+  yes.classList.remove('state-yes');
+  no.classList.remove('state-no');
+  if (choice === 'yes') {
+    yes.classList.add('state-yes');
+  } else {
+    no.classList.add('state-no');
+  }
+}
+function resetCards(e) {
+  e.stopPropagation();
+  document.getElementById('card-yes').classList.remove('state-yes');
+  document.getElementById('card-no').classList.remove('state-no');
+}
+</script>
+</body>
+</html>
